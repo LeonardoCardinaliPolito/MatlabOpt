@@ -1,173 +1,124 @@
-close all
-clear 
-clc
+function [DATA_SET, DATA_SET_mod, TEST_SET, TEST_SET_mod, TARGET_DATA, TARGET_TEST] = ML_datacreator_6p_TOIMPROVE(save_name)
 
-%% Variables definition
-FILES_LIST_data = [];
-FILES_LIST_test = [];
+parentFolder = 'C:\Users\d058003\OneDrive - Politecnico di Torino\Documenti\GitHub\MatlabOpt';
+total_files_list = getAllFiles(parentFolder, ".s6p");
 
-%data
-DATA_SET = [];
-DATA_SET_abs = [];
-TEST_SET = [];
-TEST_SET_abs = [];
+% find training set files
+substring = 'DATA_SET';
+indexes = [];
+for i = 1:numel(total_files_list)
+    if any(contains(total_files_list{i}, substring))
+        indexes = [indexes, i];
+    end
+end
 
-%labels
-TARGET_DATA = [];
-TARGET_TEST = [];
- 
-S_MP = []; %temporary array containing module and phase values of a single Sparameter
-S_RI = []; %temporary array containing real and imaginary values of a single Sparameter
+FILES_LIST_data = total_files_list(indexes); %list of files to use as training set
+FILES_LIST_test = total_files_list;
+FILES_LIST_test(indexes) = []; %the rest of the files are used as test set
 
+n_training_elements = length(FILES_LIST_data);
+n_test_elements = length(FILES_LIST_test);
+
+% preallocation
 n_points = 101;
 
-%% DATA SET + TEST SET
-parentFolder = 'C:\Users\d058003\OneDrive - Politecnico di Torino\Desktop\PhD\Machine_Learning\ML DATA CREATOR';
-subfolders = dir(parentFolder);
-subfolders = subfolders([subfolders.isdir]); % Keep only the subfolders
+DATA_SET = zeros(n_points*60, n_training_elements);
+DATA_SET_mod = zeros(n_points*30, n_training_elements);
 
-% Loop through each subfolder
-for r = 1:length(subfolders)
-    subfolderName = subfolders(r).name;
-    if ~strcmp(subfolderName, '.') && ~strcmp(subfolderName, '..')
-        % Ignore the "." and ".." folders (current and parent directories)
-        subfolderPath = fullfile(parentFolder, subfolderName);
-        disp(['Opening subfolder: ' subfolderPath]);
-        
-        % Loop through each sub-subfolder
-        sub_subfolders = dir(subfolderPath);
-        sub_subfolders = sub_subfolders([sub_subfolders.isdir]);
-        
-        for m = 1:length(sub_subfolders)
-            sub_subfolderName = sub_subfolders(m).name;
-            if ~strcmp(sub_subfolderName, '.') && ~strcmp(sub_subfolderName, '..')
-                % Ignore the "." and ".." folders (current and parent directories)
-                sub_subfolderPath = fullfile(subfolderPath, sub_subfolderName);
-                disp(['Opening sub-subfolder: ' sub_subfolderPath]);
-                
-                % Loop through each sub-sub-subfolder
-                sub_sub_subfolders = dir(sub_subfolderPath);
-                sub_sub_subfolders = sub_sub_subfolders([sub_sub_subfolders.isdir]);
-                for s = 1:length(sub_sub_subfolders)
-                    sub_sub_subfolderName = sub_sub_subfolders(s).name;
-                    if ~strcmp(sub_sub_subfolderName, '.') && ~strcmp(sub_sub_subfolderName, '..')
-                        % Ignore the "." and ".." folders (current and parent directories)
-                        sub_sub_subfolderPath = fullfile(sub_subfolderPath, sub_sub_subfolderName);
-                        
-                        disp(['Opening sub-sub-subfolder: ' sub_sub_subfolderPath]);
-                        
-                        files = dir(fullfile(sub_sub_subfolderPath, '*.s6p')); 
+TEST_SET = zeros(n_points*60, n_test_elements);
+TEST_SET_mod = zeros(n_points*30, n_test_elements);
 
-                        % Loop through each file
-                        for q = 1:length(files)
-                            filePath = fullfile(sub_sub_subfolderPath, files(q).name);
-                            
-                            data = importdata(filePath);
-                            disp(['Opened file: ' filePath]);
-                            
-                            
-                            % processFile(data);
-                            S = sparameters(filePath);
+TARGET_DATA = zeros(n_training_elements,1);
+TARGET_TEST = zeros(n_test_elements, 1);
 
-                            % put diagonal values to 0
-                            S = sii_to_zero(S);
-                            
-                            %% PUT DATA IN THE MATRICES
-                            for j = 1:6
-                                for k = 1:6
-                                    S_parameter = rfparam(S,j,k);
-                                    S_parameter = reshape(S_parameter,1,n_points);
-                                    for n = 1:length(S_parameter)
-                                            
-                                        % REAL AND IMAGINARY
-                                        Real = real(S_parameter(n));
-                                        Imag = imag(S_parameter(n));
+%% DATA SET
+for n_file=1:n_training_elements
 
-                                        S_RI = [S_RI, [Real, Imag]];
-                                           
-                                        % MODULE AND PHASE
-                                        Module = abs(S_parameter(n));
-                                        Phase = angle(S_parameter(n));
+    filePath = FILES_LIST_data{n_file};
 
-                                        S_MP = [S_MP, [Module, Phase]];
+    disp(['Opened file: ' filePath]);
 
-                                    end
-                                end
-                            end
+    % processFile(data);
+    S = sparameters(filePath);
 
-                            % DATA SET (TRAINING)
-                            if strcmp(subfolderPath,"C:\Users\d058003\OneDrive - Politecnico di Torino\Desktop\PhD\Machine_Learning\ML DATA CREATOR\DATA_SET") == 1
+    % put diagonal values to 0
+    S = sii_to_zero(S);
 
-                                FILES_LIST_data = [FILES_LIST_data, filePath];
-                                                             
-                                DATA_SET = cat(1,DATA_SET,S_RI); %INSERT DATA IN THE DATASET MATRIX
-                                DATA_SET_abs = cat(1,DATA_SET_abs,S_MP); %INSERT DATA IN THE DATASET MATRIX
+    % initialize counter to fill S_RI and S_M
+    ind = 1;
 
-                                %clear temporary variables
-                                S_MP = [];
-                                S_RI = [];
+    %% PUT DATA IN THE MATRICES
+    for j = 1:6
+        for k = 1:6
 
-                                if filePath((length(filePath)-6):(length(filePath)-4)) == "m10"
-                                    
-                                    if filePath((length(filePath)-12):(length(filePath)-8)) == "CSF_H"
-                                        
-                                        TARGET_DATA = cat(1,TARGET_DATA,0);
-                                    else
-                                        TARGET_DATA = cat(1,TARGET_DATA,1);
-                                        
-                                    end
-                                else
-                                    if filePath((length(filePath)-11):(length(filePath)-7)) == "CSF_H"
-                                        
-                                        TARGET_DATA = cat(1,TARGET_DATA,0);
-                                    else
-                                        TARGET_DATA = cat(1,TARGET_DATA,1);
-                                    end
-                                end
-                            end
-                            % TEST SET 
-                            if strcmp(subfolderPath,"C:\Users\d058003\OneDrive - Politecnico di Torino\Desktop\PhD\Machine_Learning\ML DATA CREATOR\TEST_SET") == 1
+            if j~=k % self-terms of the matrix are excluded
 
-                                FILES_LIST_test = [FILES_LIST_test, filePath];
-                                
-                                TEST_SET = cat(1,TEST_SET,S_RI); % INSERT DATA IN THE TESTSET MATRIX
-                                TEST_SET_abs = cat(1,TEST_SET_abs,S_MP); % INSERT DATA IN THE TESTSET MATRIX
+                S_parameter = rfparam(S,j,k);
+                S_parameter = reshape(S_parameter,1,n_points);
 
-                                %clear temporary variables
-                                S_MP = []; 
-                                S_RI = [];
-                                
-                                if filePath((length(filePath)-6):(length(filePath)-4)) == "m10"
-                                    
-                                    if filePath((length(filePath)-12):(length(filePath)-8)) == "CSF_H"
-                                        
-                                        TARGET_TEST = cat(1,TARGET_TEST,0);
-                                    else
-                                        TARGET_TEST = cat(1,TARGET_TEST,1);
-                                        
-                                    end
-                                else
-                                    if filePath((length(filePath)-11):(length(filePath)-7)) == "CSF_H"
-                                        
-                                        TARGET_TEST = cat(1,TARGET_TEST,0);
-                                    else
-                                        TARGET_TEST = cat(1,TARGET_TEST,1);
-                                    end
-                                end
-                            end    
-                        end
-                    end
-                end
+                % REAL AND IMAGINARY
+                Real = real(S_parameter);
+                Imag = imag(S_parameter);
+
+                DATA_SET(2*101*(ind-1) + 1 : 2*101*ind, n_file) = [Real, Imag];
+
+                % MODULE AND PHASE
+                Module = abs(S_parameter);
+
+                DATA_SET_mod(101*(ind-1) + 1 : 101*ind, n_file) = Module;
+
+                % LABEL
+                TARGET_DATA(n_file) = 0;
+
+                ind = ind+1; %update counter
             end
         end
     end
 end
 
-% remove columns of 0
-DATA_SET(:,all(~any(DATA_SET),1)) = [];
-TEST_SET(:,all(~any(TEST_SET),1)) = [];
-DATA_SET_abs(:,all(~any(DATA_SET_abs),1)) = [];
-TEST_SET_abs(:,all(~any(TEST_SET_abs),1)) = [];
+%% TEST SET
+for n_file=1:n_test_elements
 
-save_name = "DATASET.mat"
-save(strcat(save_name, ".mat"), "DATA_SET", "DATA_SET_abs", "TEST_SET", "TEST_SET_abs", "TARGET_DATA", "TARGET_TEST", "FILES_LIST_data", "FILES_LIST_test");
+    filePath = FILES_LIST_data{n_file};
+
+    disp(['Opened file: ' filePath]);
+
+    % processFile(data);
+    S = sparameters(filePath);
+
+    % put diagonal values to 0
+    S = sii_to_zero(S);
+
+    % initialize counter to fill S_RI and S_M
+    ind = 1;
+
+    %% PUT DATA IN THE MATRICES
+    for j = 1:6
+        for k = 1:6
+
+            if j~=k % self-terms of the matrix are excluded
+
+                S_parameter = rfparam(S,j,k);
+                S_parameter = reshape(S_parameter,1,n_points);
+
+                % REAL AND IMAGINARY
+                Real = real(S_parameter);
+                Imag = imag(S_parameter);
+
+                TEST_SET(2*101*(ind-1) + 1 : 2*101*ind, n_file) = [Real, Imag];
+
+                % MODULE AND PHASE
+                Module = abs(S_parameter);
+
+                TEST_SET_mod(101*(ind-1) + 1 : 101*ind, n_file) = Module;
+
+                % LABEL
+                TARGET_TEST(n_file) = 1;
+
+                ind = ind+1; %update counter
+            end
+        end
+    end
+end
+
+save(strcat(save_name, ".mat"), "DATA_SET", "DATA_SET_mod", "TEST_SET", "TEST_SET_mod", "TARGET_DATA", "TARGET_TEST", "FILES_LIST_data", "FILES_LIST_test");
