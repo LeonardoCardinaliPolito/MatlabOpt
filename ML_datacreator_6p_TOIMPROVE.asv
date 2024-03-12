@@ -22,9 +22,6 @@ n_test_elements = length(FILES_LIST_test);
 % preallocation
 n_points = 101;
 
-S_M = zeros(n_points*30, 1); %temporary array containing module values of a single Sparameter (excluding self-terms, scattering matrix contains 30 elements)
-S_RI = zeros(n_points*60, 1); %temporary array containing real and imaginary values of a single Sparameter (double the elements of the previous array)
-
 DATA_SET = zeros(n_points*60, n_training_elements);
 DATA_SET_mod = zeros(n_points*30, n_training_elements);
 
@@ -37,7 +34,7 @@ TARGET_TEST = zeros(n_test_elements, 1);
 %% DATA SET
 for n_file=1:n_training_elements
 
-    filePath = FILES_LIST_data(n_file);
+    filePath = FILES_LIST_data{n_file};
 
     disp(['Opened file: ' filePath]);
 
@@ -70,9 +67,6 @@ for n_file=1:n_training_elements
 
                 DATA_SET_mod(101*(ind-1) + 1 : 101*ind, n_file) = Module;
 
-                % LABEL
-                TARGET_DATA(n_file) = 0;
-
                 ind = ind+1; %update counter
             end
         end
@@ -82,7 +76,7 @@ end
 %% TEST SET
 for n_file=1:n_test_elements
 
-    filePath = FILES_LIST_data(n_file);
+    filePath = FILES_LIST_data{n_file};
 
     disp(['Opened file: ' filePath]);
 
@@ -116,11 +110,12 @@ for n_file=1:n_test_elements
                 TEST_SET_mod(101*(ind-1) + 1 : 101*ind, n_file) = Module;
 
                 % LABEL
-                TARGET_TEST(n_file) = 0;
+                TARGET_TEST(n_file) = 1;
 
                 ind = ind+1; %update counter
             end
         end
     end
 end
+
 save(strcat(save_name, ".mat"), "DATA_SET", "DATA_SET_mod", "TEST_SET", "TEST_SET_mod", "TARGET_DATA", "TARGET_TEST", "FILES_LIST_data", "FILES_LIST_test");

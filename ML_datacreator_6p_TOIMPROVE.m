@@ -38,6 +38,13 @@ for n_file=1:n_training_elements
 
     disp(['Opened file: ' filePath]);
 
+    % LABEL
+    if contains(filePath, "CSF_H")
+        TARGET_DATA(n_file) = 0;
+    else
+        TARGET_DATA(n_file) = 1;
+    end
+
     % processFile(data);
     S = sparameters(filePath);
 
@@ -62,13 +69,10 @@ for n_file=1:n_training_elements
 
                 DATA_SET(2*101*(ind-1) + 1 : 2*101*ind, n_file) = [Real, Imag];
 
-                % MODULE AND PHASE
+                % MODULE
                 Module = abs(S_parameter);
 
                 DATA_SET_mod(101*(ind-1) + 1 : 101*ind, n_file) = Module;
-
-                % LABEL
-                TARGET_DATA(n_file) = 0;
 
                 ind = ind+1; %update counter
             end
@@ -82,6 +86,13 @@ for n_file=1:n_test_elements
     filePath = FILES_LIST_data{n_file};
 
     disp(['Opened file: ' filePath]);
+
+    % LABEL
+    if contains(filePath, "CSF_H")
+        TARGET_DATA(n_file) = 0;
+    else
+        TARGET_DATA(n_file) = 1;
+    end
 
     % processFile(data);
     S = sparameters(filePath);
@@ -107,14 +118,11 @@ for n_file=1:n_test_elements
 
                 TEST_SET(2*101*(ind-1) + 1 : 2*101*ind, n_file) = [Real, Imag];
 
-                % MODULE AND PHASE
+                % MODULE
                 Module = abs(S_parameter);
 
                 TEST_SET_mod(101*(ind-1) + 1 : 101*ind, n_file) = Module;
-
-                % LABEL
-                TARGET_TEST(n_file) = 1;
-
+             
                 ind = ind+1; %update counter
             end
         end
