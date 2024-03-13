@@ -48,9 +48,6 @@ for n_file_train=1:n_training_elements
     % processFile(data);
     S = sparameters(filePath);
 
-    % put diagonal values to 0
-    S = sii_to_zero(S);
-
     % initialize counter to fill S_RI and S_M
     ind = 1;
 
