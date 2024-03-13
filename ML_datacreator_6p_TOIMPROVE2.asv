@@ -1,12 +1,8 @@
-close all
-clear 
-clc
-
 save_name="test";
 
 profile on
 
-ML_datacreator_6p(save_name);
+ML_datacreator_6p(save_name)
 
 profile off
 profile viewer
@@ -48,10 +44,10 @@ TARGET_DATA = zeros(n_training_elements,1);
 TARGET_TEST = zeros(n_test_elements, 1);
 
 %% DATA SET
-[DATA_SET,DATA_SET_mod] = putData (n_training_elements,FILES_LIST_data,S_matrix_size,port_quantity,n_points);
+[DATA_SET,DATA_SET_mod] = putData (n_training_elements,FILES_LIST_data,S_matrix_size,port_quantity,n_points)
 
 %% TEST SET
-[TEST_SET,TEST_SET_mod] = putData (n_test_elements,FILES_LIST_test,S_matrix_size,port_quantity,n_points);
+[TEST_SET,TEST_SET_mod] = putData (n_test_elements,FILES_LIST_data,S_matrix_size,port_quantity,n_points)
 
 
 save(strcat(save_name, ".mat"), "DATA_SET", "DATA_SET_mod", "TEST_SET", "TEST_SET_mod", "TARGET_DATA", "TARGET_TEST", "FILES_LIST_data", "FILES_LIST_test");
@@ -59,14 +55,11 @@ save(strcat(save_name, ".mat"), "DATA_SET", "DATA_SET_mod", "TEST_SET", "TEST_SE
 end
 
 
-function data= readFile(filePath,S_matrix_size)
+function data= readFile(filePath)
     fid = fopen(filePath, 'rt');
-    datacell = textscan(fid,'%f','HeaderLines', 4+S_matrix_size);%4 to skip first two lines
-    %and last two lines  where there is date etc and Smatrix size because 
-    % it is written S11,S12... etc 
+    datacell = textscan(fid,'%s','HeaderLines', 2);%skipping first two lines where there is date and other numbers that might contain 1 
     fclose(fid);
-
-    data = datacell{1};%all characters are transformed to NaN and all numbers are transformed to double
+    data = str2double(datacell{1});%all characters are transformed to NaN and all numbers are transformed to double
     data = data(~isnan(data)); %removing all NaN
     data(data>1)=[];
 end
@@ -80,7 +73,7 @@ function [SET,SET_mod] = putData (n_element,FILES_LIST,S_matrix_size,port_quanti
     
     for n_file=1:n_element
     
-        filePath = FILES_LIST{n_file}
+        filePath = FILES_LIST{n_file};
     
         disp(['Opened file: ' filePath]);
     
@@ -92,9 +85,9 @@ function [SET,SET_mod] = putData (n_element,FILES_LIST,S_matrix_size,port_quanti
         end
     
         % processFile(data);
-        S=readFile(filePath,S_matrix_size);
+        S=readFile(filePath);
         % remove reflection coefficients
-        S = removeReflection(S,port_quantity,n_points);
+        S = sii_to_zero(S,port_quantity,n_points);
         SET(:,n_file)=S;
     
         S_mod=S(1:2:end-1).^2 + S(2:2:end).^2;
