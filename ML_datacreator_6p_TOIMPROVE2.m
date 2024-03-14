@@ -35,7 +35,6 @@ TARGET_DATA = zeros(n_training_elements,1);
 TARGET_TEST = zeros(n_test_elements, 1);
 
 %% DATA SET
-for n_file=1:n_training_elements
 for n_file_train=1:n_training_elements
 
     filePath = FILES_LIST_data{n_file_train};
