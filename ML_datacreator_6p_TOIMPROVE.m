@@ -1,20 +1,7 @@
-close all
-clear 
-clc
-
-save_name="test";
-
-profile on
-
-ML_datacreator_6p(save_name);
-
-profile off
-profile viewer
 
 
-function [DATA_SET, DATA_SET_mod, TEST_SET, TEST_SET_mod, TARGET_DATA, TARGET_TEST] = ML_datacreator_6p(save_name)
+function [DATA_SET, DATA_SET_mod, TEST_SET, TEST_SET_mod, TARGET_DATA, TARGET_TEST] = ML_datacreator_6p_TOIMPROVE(save_name,parentFolder)
 
-parentFolder = 'C:\Users\d105457\Documents\GitHub\MatlabOpt';
 total_files_list = getAllFiles(parentFolder, ".s6p");
 
 % find training set files
@@ -41,8 +28,8 @@ S_matrix_size=port_quantity^2;
 %DATA_SET = zeros(n_points*60, n_training_elements);
 %DATA_SET_mod = zeros(n_points*30, n_training_elements);
 
-TEST_SET = zeros(n_points*60, n_test_elements);
-TEST_SET_mod = zeros(n_points*30, n_test_elements);
+%TEST_SET = zeros(n_points*60, n_test_elements);
+%TEST_SET_mod = zeros(n_points*30, n_test_elements);
 
 TARGET_DATA = zeros(n_training_elements,1);
 TARGET_TEST = zeros(n_test_elements, 1);
@@ -94,11 +81,11 @@ function [SET,SET_mod] = putData (n_element,FILES_LIST,S_matrix_size,port_quanti
         % processFile(data);
         S=readSparams(filePath,S_matrix_size);
         % remove reflection coefficients
-        %S = removeReflection(S,port_quantity,n_points);
-        %SET(:,n_file)=S;
+        S = removeReflection(S,port_quantity,n_points); % I no longer use siitozero
+        SET(:,n_file)=S;
     
-        %S_mod=S(1:2:end-1).^2 + S(2:2:end).^2;
-        %SET_mod(:,n_file)=sqrt(S_mod);
+        S_mod=S(1:2:end-1).^2 + S(2:2:end).^2;
+        SET_mod(:,n_file)=sqrt(S_mod);
     end
 
 end
