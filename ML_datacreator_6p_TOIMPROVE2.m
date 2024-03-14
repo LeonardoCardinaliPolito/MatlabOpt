@@ -59,7 +59,7 @@ save(strcat(save_name, ".mat"), "DATA_SET", "DATA_SET_mod", "TEST_SET", "TEST_SE
 end
 
 
-function data= readFile(filePath,S_matrix_size)
+function data= readSparams(filePath,S_matrix_size)
     fid = fopen(filePath, 'rt');
     datacell = textscan(fid,'%f','HeaderLines', 4+S_matrix_size);%4 to skip first two lines
     %and last two lines  where there is date etc and Smatrix size because 
@@ -92,13 +92,13 @@ function [SET,SET_mod] = putData (n_element,FILES_LIST,S_matrix_size,port_quanti
         end
     
         % processFile(data);
-        S=readFile(filePath,S_matrix_size);
+        S=readSparams(filePath,S_matrix_size);
         % remove reflection coefficients
-        S = removeReflection(S,port_quantity,n_points);
-        SET(:,n_file)=S;
+        %S = removeReflection(S,port_quantity,n_points);
+        %SET(:,n_file)=S;
     
-        S_mod=S(1:2:end-1).^2 + S(2:2:end).^2;
-        SET_mod(:,n_file)=sqrt(S_mod);
+        %S_mod=S(1:2:end-1).^2 + S(2:2:end).^2;
+        %SET_mod(:,n_file)=sqrt(S_mod);
     end
 
 end
